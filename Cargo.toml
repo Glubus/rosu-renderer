@@ -1,0 +1,21 @@
+[package]
+name = "rosu-layout"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+eframe = "0.32.0"
+egui = "0.32.0"
+egui_extras = { version = "0.32.0", features = ["image", "file"] }
+rosu-map = "0.2.1"
+image = { version = "0.25", features = ["jpeg", "png"] }
+
+
+[dev-dependencies]
+eframe = "0.32.0"
+rfd = "0.15.3"
+
+[[example]]
+name = "mania"
+path = "examples/mania.rs"
