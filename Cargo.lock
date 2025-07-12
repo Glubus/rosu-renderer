@@ -2833,7 +2833,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a457e416a0f90d246a4c3288bd7a25b2304ca727f253f95be383dd17af56be8f"
 
 [[package]]
-name = "rosu-layout"
+name = "rosu-map"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b92ea634d8b3eaa4d7fba7bd12045dda1a50ce81401c96af0d9c851b0737544"
+
+[[package]]
+name = "rosu-render"
 version = "0.1.0"
 dependencies = [
  "eframe",
@@ -2843,12 +2849,6 @@ dependencies = [
  "rfd",
  "rosu-map",
 ]
-
-[[package]]
-name = "rosu-map"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b92ea634d8b3eaa4d7fba7bd12045dda1a50ce81401c96af0d9c851b0737544"
 
 [[package]]
 name = "rustc-hash"
