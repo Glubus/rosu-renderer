@@ -1,7 +1,7 @@
 use eframe::egui::{self, Color32};
 use egui::{ImageSource, Vec2};
 use rfd::FileDialog;
-use rosu_render::{
+use rosu_renderer::{
     layout::mania::{NoteShape, NoteStyle},
     Player,
 };
