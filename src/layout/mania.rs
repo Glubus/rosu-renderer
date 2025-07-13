@@ -178,98 +178,84 @@ impl ManiaRenderer {
         let total_width = self.required_width(keycount);
         let total_height = self.required_height();
 
-        // NOTE: For egui 0.32.0, allocate_ui_at_rect is the only stable way to position a sub-UI at an absolute position.
-        // The dark canvas and all drawing are done relative to (0,0) inside this rect. and i'm lazy bitch
-        ui.allocate_ui_at_rect(
-            egui::Rect::from_min_size(position, egui::Vec2::new(total_width, total_height)),
-            |ui| {
-                egui::Frame::dark_canvas(ui.style()).show(ui, |ui| {
-                    let rect = egui::Rect::from_min_size(egui::pos2(0.0, 0.0), egui::Vec2::new(total_width, total_height));
+        // Draw background rectangle at the specified position
+        let background_rect = egui::Rect::from_min_size(position, egui::Vec2::new(total_width, total_height));
+        ui.painter().rect_filled(background_rect, 0.0, egui::Color32::from_gray(20));
 
-                    ui.set_min_size(egui::Vec2::new(total_width, total_height));
-                    ui.set_max_size(egui::Vec2::new(total_width, total_height));
+        // Draw columns
+        for i in 0..keycount {
+            let column_rect = egui::Rect::from_min_size(
+                egui::pos2(position.x + i as f32 * self.column_width, position.y),
+                egui::Vec2::new(self.column_width, total_height),
+            );
+            ui.painter()
+                .rect_filled(column_rect, 0.0, egui::Color32::from_gray(30));
+        }
 
-                    let play_area = rect;
-                    let clip_rect = ui.clip_rect().intersect(play_area);
-                    ui.set_clip_rect(clip_rect);
-
-                    // Draw columns
-                    for i in 0..keycount {
-                        let column_rect = egui::Rect::from_min_size(
-                            egui::pos2(i as f32 * self.column_width, 0.0),
-                            egui::Vec2::new(self.column_width, total_height),
-                        );
-                        ui.painter()
-                            .rect_filled(column_rect, 0.0, egui::Color32::from_gray(20));
-                    }
-
-                    let judgment_line_y = total_height - 100.0;
-                    ui.painter().line_segment(
-                        [
-                            egui::pos2(0.0, judgment_line_y),
-                            egui::pos2(total_width, judgment_line_y),
-                        ],
-                        egui::Stroke::new(2.0, egui::Color32::WHITE),
-                    );
-
-                    if hit_objects.last().is_some() {
-                        // Draw hold notes first
-                        for hit_object in hit_objects
-                            .iter()
-                            .filter(|h| matches!(h.kind, HitObjectKind::Hold(_)))
-                        {
-                            if let HitObjectKind::Hold(h) = &hit_object.kind {
-                                let column = (h.pos_x / 512.0 * keycount as f32) as usize % keycount;
-                                let x_pos = column as f32 * self.column_width;
-
-                                let note_time = hit_object.start_time / speed + scroll_time_ms as f64;
-                                let end_time =
-                                    (hit_object.start_time + h.duration) / speed + scroll_time_ms as f64;
-
-                                let time_diff = note_time - current_time;
-                                let end_time_diff = end_time - current_time;
-
-                                let y_pos =
-                                    judgment_line_y - (time_diff as f32 / scroll_time_ms) * total_height;
-                                let end_y_pos = judgment_line_y
-                                    - (end_time_diff as f32 / scroll_time_ms) * total_height;
-
-                                if end_y_pos <= judgment_line_y {
-                                    self.render_hold(ui, x_pos, y_pos, end_y_pos, judgment_line_y);
-                                }
-                            }
-                        }
-
-                        // Then draw regular notes
-                        for hit_object in hit_objects {
-                            let note_time = hit_object.start_time / speed + scroll_time_ms as f64;
-                            let time_diff = note_time - current_time;
-                            let y_pos =
-                                judgment_line_y - (time_diff as f32 / scroll_time_ms) * total_height;
-
-                            if y_pos <= judgment_line_y {
-                                let x_pos = match &hit_object.kind {
-                                    HitObjectKind::Circle(h) => {
-                                        let column =
-                                            (h.pos.x / 512.0 * keycount as f32) as usize % keycount;
-                                        column as f32 * self.column_width
-                                    }
-                                    HitObjectKind::Hold(h) => {
-                                        let column =
-                                            (h.pos_x / 512.0 * keycount as f32) as usize % keycount;
-                                        column as f32 * self.column_width
-                                    }
-                                    _ => continue,
-                                };
-
-                                if y_pos >= 0.0 {
-                                    self.draw_note(ui, x_pos, y_pos);
-                                }
-                            }
-                        }
-                    }
-                });
-            },
+        let judgment_line_y = position.y + total_height - 100.0;
+        ui.painter().line_segment(
+            [
+                egui::pos2(position.x, judgment_line_y),
+                egui::pos2(position.x + total_width, judgment_line_y),
+            ],
+            egui::Stroke::new(2.0, egui::Color32::WHITE),
         );
+
+        if hit_objects.last().is_some() {
+            // Draw hold notes first
+            for hit_object in hit_objects
+                .iter()
+                .filter(|h| matches!(h.kind, HitObjectKind::Hold(_)))
+            {
+                if let HitObjectKind::Hold(h) = &hit_object.kind {
+                    let column = (h.pos_x / 512.0 * keycount as f32) as usize % keycount;
+                    let x_pos = position.x + column as f32 * self.column_width;
+
+                    let note_time = hit_object.start_time / speed + scroll_time_ms as f64;
+                    let end_time =
+                        (hit_object.start_time + h.duration) / speed + scroll_time_ms as f64;
+
+                    let time_diff = note_time - current_time;
+                    let end_time_diff = end_time - current_time;
+
+                    let y_pos =
+                        judgment_line_y - (time_diff as f32 / scroll_time_ms) * total_height;
+                    let end_y_pos = judgment_line_y
+                        - (end_time_diff as f32 / scroll_time_ms) * total_height;
+
+                    if end_y_pos <= judgment_line_y {
+                        self.render_hold(ui, x_pos, y_pos, end_y_pos, judgment_line_y);
+                    }
+                }
+            }
+
+            // Then draw regular notes
+            for hit_object in hit_objects {
+                let note_time = hit_object.start_time / speed + scroll_time_ms as f64;
+                let time_diff = note_time - current_time;
+                let y_pos =
+                    judgment_line_y - (time_diff as f32 / scroll_time_ms) * total_height;
+
+                if y_pos <= judgment_line_y {
+                    let x_pos = match &hit_object.kind {
+                        HitObjectKind::Circle(h) => {
+                            let column =
+                                (h.pos.x / 512.0 * keycount as f32) as usize % keycount;
+                            position.x + column as f32 * self.column_width
+                        }
+                        HitObjectKind::Hold(h) => {
+                            let column =
+                                (h.pos_x / 512.0 * keycount as f32) as usize % keycount;
+                            position.x + column as f32 * self.column_width
+                        }
+                        _ => continue,
+                    };
+
+                    if y_pos >= position.y {
+                        self.draw_note(ui, x_pos, y_pos);
+                    }
+                }
+            }
+        }
     }
 }

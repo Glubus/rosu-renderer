@@ -24,6 +24,7 @@ struct ManiaApp {
     beatmap_ln: Beatmap,
     beatmap_normal: Beatmap,
     using_ln: bool,
+    render_position: [f32; 2],
 }
 
 impl ManiaApp {
@@ -76,6 +77,7 @@ impl ManiaApp {
                 beatmap_ln,
                 beatmap_normal,
                 using_ln: true,
+                render_position: [50.0, 50.0],
             }
         })
     }
@@ -211,6 +213,26 @@ impl ManiaApp {
                         self.reload_player_with_reset(false);
                     }
                 });
+
+                ui.horizontal(|ui| {
+                    ui.label("Position X:");
+                    if ui
+                        .add(egui::Slider::new(&mut self.render_position[0], 0.0..=500.0).suffix(" px"))
+                        .changed()
+                    {
+                        // Position changed, no need to reload
+                    }
+                });
+
+                ui.horizontal(|ui| {
+                    ui.label("Position Y:");
+                    if ui
+                        .add(egui::Slider::new(&mut self.render_position[1], 0.0..=500.0).suffix(" px"))
+                        .changed()
+                    {
+                        // Position changed, no need to reload
+                    }
+                });
             });
 
             // Center controls
@@ -324,7 +346,8 @@ impl eframe::App for ManiaApp {
         // Central panel for gameplay
         egui::CentralPanel::default()
             .show(ctx, |ui| {
-                self.player.render(ui);
+                // Use render_at with the specified position
+                self.player.render_at(ui, egui::pos2(self.render_position[0], self.render_position[1]));
 
                 // Update time if not dragging the slider
                 if !ui.input(|i| i.pointer.primary_down()) {
