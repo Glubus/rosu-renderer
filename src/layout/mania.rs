@@ -201,10 +201,28 @@ impl ManiaRenderer {
             egui::Stroke::new(2.0, egui::Color32::WHITE),
         );
 
-        if hit_objects.last().is_some() {
+        // Only process hit objects if there are any
+        if !hit_objects.is_empty() {
+            // Pre-calculate time bounds for visible objects
+            let visible_start_time = current_time - scroll_time_ms as f64 * 2.0;
+            let visible_end_time = current_time + scroll_time_ms as f64 * 0.5;
+            
             // Draw hold notes first
             for hit_object in hit_objects
                 .iter()
+                .filter(|h| {
+                    let obj_time = h.start_time / speed;
+                    // For hold notes, also check the end time
+                    let obj_end_time = if let HitObjectKind::Hold(hold) = &h.kind {
+                        (h.start_time + hold.duration) / speed
+                    } else {
+                        obj_time
+                    };
+                    // Show if either start or end is visible
+                    (obj_time >= visible_start_time && obj_time <= visible_end_time) ||
+                    (obj_end_time >= visible_start_time && obj_end_time <= visible_end_time) ||
+                    (obj_time <= visible_start_time && obj_end_time >= visible_end_time) // Note spans the visible area
+                })
                 .filter(|h| matches!(h.kind, HitObjectKind::Hold(_)))
             {
                 if let HitObjectKind::Hold(h) = &hit_object.kind {
@@ -230,7 +248,13 @@ impl ManiaRenderer {
             }
 
             // Then draw regular notes
-            for hit_object in hit_objects {
+            for hit_object in hit_objects
+                .iter()
+                .filter(|h| {
+                    let obj_time = h.start_time / speed;
+                    obj_time >= visible_start_time && obj_time <= visible_end_time
+                })
+            {
                 let note_time = hit_object.start_time / speed + scroll_time_ms as f64;
                 let time_diff = note_time - current_time;
                 let y_pos =
@@ -251,7 +275,9 @@ impl ManiaRenderer {
                         _ => continue,
                     };
 
-                    if y_pos >= position.y {
+                    // Draw notes when they start entering the screen (considering note height)
+                    let note_height = self.note_size * 0.25; // Approximate note height
+                    if y_pos >= -note_height {
                         self.draw_note(ui, x_pos, y_pos);
                     }
                 }

@@ -354,6 +354,7 @@ impl eframe::App for ManiaApp {
                     self.playback_time = self.player.current_time();
                 }
 
+                // Request repaint for smooth animation
                 ctx.request_repaint();
             });
 
