@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/Glubus/rosu-renderer"
 authors = ["Glubus"]
 keywords = ["osu", "game", "beatmap", "egui"]
-categories = ["games", "egui"]
+categories = ["games"]
 
 [dependencies]
 eframe = "0.32.0"

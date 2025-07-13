@@ -160,13 +160,26 @@ impl ManiaRenderer {
         speed: f64,
         keycount: usize,
     ) {
+        self.render_at(ui, hit_objects, current_time, scroll_time_ms, speed, keycount, pos2(0.0, 0.0))
+    }
+
+    pub fn render_at(
+        &mut self,
+        ui: &mut egui::Ui,
+        hit_objects: &[HitObject],
+        current_time: f64,
+        scroll_time_ms: f32,
+        speed: f64,
+        keycount: usize,
+        position: egui::Pos2,
+    ) {
         self.speed = speed;
 
         let total_width = self.required_width(keycount);
         let total_height = self.required_height();
 
         egui::Frame::dark_canvas(ui.style()).show(ui, |ui| {
-            let rect = Rect::from_min_size(pos2(0.0, 0.0), Vec2::new(total_width, total_height));
+            let rect = Rect::from_min_size(position, Vec2::new(total_width, total_height));
 
             ui.set_min_size(Vec2::new(total_width, total_height));
             ui.set_max_size(Vec2::new(total_width, total_height));
@@ -178,18 +191,18 @@ impl ManiaRenderer {
             // Draw columns
             for i in 0..keycount {
                 let column_rect = Rect::from_min_size(
-                    pos2(i as f32 * self.column_width, 0.0),
+                    pos2(position.x + i as f32 * self.column_width, position.y),
                     Vec2::new(self.column_width, total_height),
                 );
                 ui.painter()
                     .rect_filled(column_rect, 0.0, egui::Color32::from_gray(20));
             }
 
-            let judgment_line_y = total_height - 100.0;
+            let judgment_line_y = position.y + total_height - 100.0;
             ui.painter().line_segment(
                 [
-                    pos2(0.0, judgment_line_y),
-                    pos2(total_width, judgment_line_y),
+                    pos2(position.x, judgment_line_y),
+                    pos2(position.x + total_width, judgment_line_y),
                 ],
                 egui::Stroke::new(2.0, egui::Color32::WHITE),
             );
@@ -202,7 +215,7 @@ impl ManiaRenderer {
                 {
                     if let HitObjectKind::Hold(h) = &hit_object.kind {
                         let column = (h.pos_x / 512.0 * keycount as f32) as usize % keycount;
-                        let x_pos = column as f32 * self.column_width;
+                        let x_pos = position.x + column as f32 * self.column_width;
 
                         let note_time = hit_object.start_time / speed + scroll_time_ms as f64;
                         let end_time =
@@ -234,12 +247,12 @@ impl ManiaRenderer {
                             HitObjectKind::Circle(h) => {
                                 let column =
                                     (h.pos.x / 512.0 * keycount as f32) as usize % keycount;
-                                column as f32 * self.column_width
+                                position.x + column as f32 * self.column_width
                             }
                             HitObjectKind::Hold(h) => {
                                 let column =
                                     (h.pos_x / 512.0 * keycount as f32) as usize % keycount;
-                                column as f32 * self.column_width
+                                position.x + column as f32 * self.column_width
                             }
                             _ => continue,
                         };

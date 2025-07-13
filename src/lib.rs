@@ -73,25 +73,30 @@ impl Player {
     }
 
     pub fn render(&mut self, ui: &mut egui::Ui) {
+        self.render_at(ui, egui::pos2(0.0, 0.0))
+    }
+
+    pub fn render_at(&mut self, ui: &mut egui::Ui, position: egui::Pos2) {
         let current_time = self.start_time.elapsed().as_secs_f64() * 1000.0;
         let hit_objects = &self.beatmap.hit_objects;
 
         match &mut self.renderer {
             GameModeRenderer::Mania(mania) => {
                 let keycount = self.beatmap.circle_size as usize;
-                mania.render(
+                mania.render_at(
                     ui,
                     hit_objects,
                     current_time,
                     self.scroll_time_ms,
                     self.speed,
                     keycount,
+                    position,
                 );
             }
             // TODO: Ajouter d'autres modes
-            // GameModeRenderer::Standard(std) => std.render(...),
-            // GameModeRenderer::Taiko(taiko) => taiko.render(...),
-            // GameModeRenderer::Catch(catch) => catch.render(...),
+            // GameModeRenderer::Standard(std) => std.render_at(...),
+            // GameModeRenderer::Taiko(taiko) => taiko.render_at(...),
+            // GameModeRenderer::Catch(catch) => catch.render_at(...),
         }
     }
 

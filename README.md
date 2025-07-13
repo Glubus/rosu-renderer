@@ -66,6 +66,9 @@ player.set_scroll_time(1000.0);
 
 // In your egui app update loop:
 player.render(ui);
+
+// Or render at a specific position:
+player.render_at(ui, egui::pos2(100.0, 50.0));
 ```
 
 ### Running the Example
@@ -108,8 +111,11 @@ impl Player {
     // Set scroll time in milliseconds
     pub fn set_scroll_time(&mut self, ms: f32)
     
-    // Render the beatmap
+    // Render the beatmap at position (0,0)
     pub fn render(&mut self, ui: &mut egui::Ui)
+    
+    // Render the beatmap at a specific position
+    pub fn render_at(&mut self, ui: &mut egui::Ui, position: egui::Pos2)
     
     // Reset playback time
     pub fn reset_time(&mut self)
